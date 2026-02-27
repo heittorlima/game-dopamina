@@ -14,8 +14,9 @@ button { padding: 10px 20px; margin: 5px; }
 <h2>Game Dopamina</h2>
 
 <p>Pontos: <span id="points">0</span></p>
-   <p>Tarefas na semana: <span id="weekly">0</span></p>
+<p>Tarefas na semana: <span id="weekly">0</span></p>
 <p>Status ⚡️: <span id="status">Bloqueado</span></p>
+
 <input id="task" placeholder="Qual tarefa?" /><br><br>
 <input id="reward" placeholder="Qual recompensa?" /><br><br>
 <input id="minutes" type="number" placeholder="Minutos" /><br><br>
@@ -28,25 +29,41 @@ button { padding: 10px 20px; margin: 5px; }
 
 <script>
 
-const API_KEY = "AIzaSyC3yuYHEI7KV-45yeiLCOefR4l66A-lyI0";
-let points = localStorage.getItem("points") || 0;
-    <p>Tarefas na semana: <span id="weekly">0</span></p>
-<p>Status ⚡️: <span id="status">Bloqueado</span></p>
+const API_KEY = "SUA_API_AQUI";
+
+// --------- INICIALIZAÇÃO ---------
+
+let points = parseInt(localStorage.getItem("points")) || 0;
+let weeklyTasks = parseInt(localStorage.getItem("weeklyTasks")) || 0;
+
 document.getElementById("points").innerText = points;
+document.getElementById("weekly").innerText = weeklyTasks;
 
 let timeLeft = 0;
-let timerInterval;
+let timerInterval = null;
+
+// --------- TIMER ---------
 
 function startTimer() {
-    let minutes = document.getElementById("minutes").value;
+    let minutes = parseInt(document.getElementById("minutes").value);
+
+    if (!minutes || minutes <= 0) {
+        alert("Digite um tempo válido.");
+        return;
+    }
+
     timeLeft = minutes * 60;
     updateTimer();
 
+    if (timerInterval) clearInterval(timerInterval);
+
     timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimer();
-        if (timeLeft <= 0) {
+        if (timeLeft > 0) {
+            timeLeft--;
+            updateTimer();
+        } else {
             clearInterval(timerInterval);
+            timerInterval = null;
         }
     }, 1000);
 }
@@ -58,12 +75,22 @@ function updateTimer() {
         String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
 }
 
+// --------- FINALIZAÇÃO ---------
+
 async function finishTask() {
 
-    clearInterval(timerInterval);
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 
-    let task = document.getElementById("task").value;
-    let reward = document.getElementById("reward").value;
+    let task = document.getElementById("task").value.trim();
+    let reward = document.getElementById("reward").value.trim();
+
+    if (!task) {
+        alert("Descreva a tarefa.");
+        return;
+    }
 
     const prompt = `
 O usuário disse que fez a tarefa: "${task}".
@@ -89,14 +116,19 @@ REPROVADO
     const text = data.candidates[0].content.parts[0].text.trim();
 
     if (text.includes("APROVADO")) {
+
         points++;
         weeklyTasks++;
-localStorage.setItem("weeklyTasks", weeklyTasks);
-document.getElementById("weekly").innerText = weeklyTasks;
+
         localStorage.setItem("points", points);
+        localStorage.setItem("weeklyTasks", weeklyTasks);
+
         document.getElementById("points").innerText = points;
+        document.getElementById("weekly").innerText = weeklyTasks;
+
         document.getElementById("response").innerText =
             "✅ Tarefa validada! Recompensa liberada: " + reward;
+
     } else {
         document.getElementById("response").innerText =
             "❌ Tarefa não validada.";
