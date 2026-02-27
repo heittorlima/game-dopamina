@@ -14,7 +14,8 @@ button { padding: 10px 20px; margin: 5px; }
 <h2>Game Dopamina</h2>
 
 <p>Pontos: <span id="points">0</span></p>
-
+   <p>Tarefas na semana: <span id="weekly">0</span></p>
+<p>Status ⚡️: <span id="status">Bloqueado</span></p>
 <input id="task" placeholder="Qual tarefa?" /><br><br>
 <input id="reward" placeholder="Qual recompensa?" /><br><br>
 <input id="minutes" type="number" placeholder="Minutos" /><br><br>
@@ -29,6 +30,8 @@ button { padding: 10px 20px; margin: 5px; }
 
 const API_KEY = "AIzaSyC3yuYHEI7KV-45yeiLCOefR4l66A-lyI0";
 let points = localStorage.getItem("points") || 0;
+    <p>Tarefas na semana: <span id="weekly">0</span></p>
+<p>Status ⚡️: <span id="status">Bloqueado</span></p>
 document.getElementById("points").innerText = points;
 
 let timeLeft = 0;
@@ -87,6 +90,9 @@ REPROVADO
 
     if (text.includes("APROVADO")) {
         points++;
+        weeklyTasks++;
+localStorage.setItem("weeklyTasks", weeklyTasks);
+document.getElementById("weekly").innerText = weeklyTasks;
         localStorage.setItem("points", points);
         document.getElementById("points").innerText = points;
         document.getElementById("response").innerText =
