@@ -2,48 +2,63 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Sistema de Economia Pessoal</title>
+<title>Sistema Operacional Pessoal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; background:#f4f6f8; padding:20px; max-width:900px; margin:auto;}
+body { font-family: Arial; background:#f4f6f8; padding:20px; max-width:1000px; margin:auto;}
 .section { background:white; padding:15px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
 button { padding:6px 12px; margin-top:5px; cursor:pointer; }
 input, select { padding:6px; margin:4px 0; width:100%; }
-.progress-bar { height:20px; background:#ddd; border-radius:10px; overflow:hidden; }
+.progress-bar { height:18px; background:#ddd; border-radius:10px; overflow:hidden; }
 .progress-fill { height:100%; background:#4caf50; width:0%; transition:0.3s; }
-.task, .reward { border-bottom:1px solid #eee; padding:8px 0; }
 .small { font-size:13px; color:#666; }
-.level { font-size:18px; font-weight:bold; }
-.special { background:#fff8e1; padding:10px; border-radius:8px; margin-top:10px;}
+.hidden { display:none; }
+.toggle { float:right; }
+.energy { font-weight:bold; }
+.task { border-bottom:1px solid #eee; padding:8px 0; }
 </style>
 </head>
 <body>
 
-<h2>Sistema de Economia Pessoal</h2>
+<h2>Sistema Operacional Pessoal</h2>
+<button class="toggle" onclick="toggleMode()">Alternar Modo</button>
+
+<!-- MODO SIMPLES -->
+<div id="simpleMode">
 
 <div class="section">
-<p><b>Saldo Atual:</b> <span id="currentPoints">0</span></p>
-<p><b>Total Histórico:</b> <span id="totalPoints">0</span></p>
-<p class="level">Nível: <span id="level">1</span></p>
-
-<p>Progresso até Recompensa Especial (5000)</p>
+<b>Saldo:</b> <span id="currentPoints"></span> |
+<b>Nível:</b> <span id="level"></span>
+<br><br>
+Energia Hoje: <span class="energy" id="energy"></span>/10
+<br><br>
+Progresso até Especial (5000)
 <div class="progress-bar">
 <div class="progress-fill" id="progressFill"></div>
 </div>
-<p class="small"><span id="progressText"></span></p>
-
-<div class="special">
-<b>Recompensa Especial</b><br>
-Custo: 5000 pontos<br>
-Comprada: <span id="specialCount">0</span> vezes<br>
-<button onclick="buySpecial()">Comprar Especial</button>
+<span class="small" id="progressText"></span>
 </div>
+
+<div class="section">
+<h3>Tarefas de Hoje</h3>
+<div id="todayTasks"></div>
+</div>
+
+</div>
+
+<!-- MODO ANÁLISE -->
+<div id="analysisMode" class="hidden">
+
+<div class="section">
+<b>Total Histórico:</b> <span id="totalPoints"></span><br>
+<b>Especial Comprada:</b> <span id="specialCount"></span> vezes<br>
+<b>Tarefas Concluídas na Semana:</b> <span id="weeklyCompleted"></span>
 </div>
 
 <div class="section">
 <h3>Adicionar Tarefa</h3>
-<input id="taskName" placeholder="Nome da tarefa">
+<input id="taskName" placeholder="Nome">
 <select id="taskPoints">
 <option value="10">Muito Fácil (10)</option>
 <option value="25">Fácil (25)</option>
@@ -51,157 +66,170 @@ Comprada: <span id="specialCount">0</span> vezes<br>
 <option value="150">Difícil (150)</option>
 <option value="300">Muito Difícil (300)</option>
 </select>
+
+<select id="taskEnergy">
+<option value="1">Energia 1</option>
+<option value="2">Energia 2</option>
+<option value="3">Energia 3</option>
+<option value="4">Energia 4</option>
+<option value="5">Energia 5</option>
+</select>
+
+<select id="taskCategory"></select>
+
+<select id="taskDay">
+<option value="1">Segunda</option>
+<option value="2">Terça</option>
+<option value="3">Quarta</option>
+<option value="4">Quinta</option>
+<option value="5">Sexta</option>
+<option value="6">Sábado</option>
+<option value="0">Domingo</option>
+</select>
+
 <button onclick="addTask()">Adicionar</button>
+
+<h4>Nova Categoria</h4>
+<input id="newCategory" placeholder="Nome da categoria">
+<button onclick="addCategory()">Adicionar Categoria</button>
+
 </div>
 
-<div class="section">
-<h3>Tarefas Pendentes</h3>
-<div id="taskList"></div>
-</div>
-
-<div class="section">
-<h3>Adicionar Recompensa</h3>
-<input id="rewardName" placeholder="Nome da recompensa">
-<input id="rewardCost" type="number" placeholder="Custo em pontos">
-<button onclick="addReward()">Adicionar</button>
-</div>
-
-<div class="section">
-<h3>Recompensas</h3>
-<div id="rewardList"></div>
-</div>
-
-<div class="section">
-<h3>Histórico de Compras</h3>
-<div id="historyList"></div>
 </div>
 
 <script>
-let currentPoints = parseInt(localStorage.getItem("currentPoints")) || 0;
-let totalPointsEarned = parseInt(localStorage.getItem("totalPointsEarned")) || 0;
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-let rewards = JSON.parse(localStorage.getItem("rewards")) || [];
-let history = JSON.parse(localStorage.getItem("history")) || [];
-let specialCount = parseInt(localStorage.getItem("specialCount")) || 0;
+let data = JSON.parse(localStorage.getItem("sopData")) || {
+currentPoints: 0,
+totalPointsEarned: 0,
+energyToday: 10,
+lastEnergyReset: null,
+tasks: [],
+categories: ["Estudo","Corpo","Casa","Social","Projeto","Organização"],
+specialCount: 0,
+history: []
+};
 
 function save() {
-localStorage.setItem("currentPoints", currentPoints);
-localStorage.setItem("totalPointsEarned", totalPointsEarned);
-localStorage.setItem("tasks", JSON.stringify(tasks));
-localStorage.setItem("rewards", JSON.stringify(rewards));
-localStorage.setItem("history", JSON.stringify(history));
-localStorage.setItem("specialCount", specialCount);
+localStorage.setItem("sopData", JSON.stringify(data));
+}
+
+function getWeekStart() {
+let now = new Date();
+let day = now.getDay();
+let diff = now.getDate() - day + (day === 0 ? -6 : 1);
+return new Date(now.setDate(diff));
+}
+
+function resetEnergyIfNeeded() {
+let today = new Date().toDateString();
+if (data.lastEnergyReset !== today) {
+data.energyToday = 10;
+data.lastEnergyReset = today;
+}
 }
 
 function updateUI() {
-document.getElementById("currentPoints").innerText = currentPoints;
-document.getElementById("totalPoints").innerText = totalPointsEarned;
-document.getElementById("specialCount").innerText = specialCount;
+resetEnergyIfNeeded();
 
-let level = Math.floor(totalPointsEarned / 1000) + 1;
-document.getElementById("level").innerText = level;
+document.getElementById("currentPoints").innerText = data.currentPoints;
+document.getElementById("totalPoints").innerText = data.totalPointsEarned;
+document.getElementById("level").innerText = Math.floor(data.totalPointsEarned/1000)+1;
+document.getElementById("specialCount").innerText = data.specialCount;
+document.getElementById("energy").innerText = data.energyToday;
 
-let progress = Math.min((currentPoints / 5000) * 100, 100);
-document.getElementById("progressFill").style.width = progress + "%";
+let progress = Math.min((data.currentPoints/5000)*100,100);
+document.getElementById("progressFill").style.width = progress+"%";
 
-let remaining = 5000 - currentPoints;
 document.getElementById("progressText").innerText =
-remaining > 0 ? remaining + " pontos restantes" : "Especial disponível!";
+data.currentPoints>=5000 ? "Especial disponível!" :
+(5000-data.currentPoints)+" pontos restantes";
 
-renderTasks();
-renderRewards();
-renderHistory();
+renderTodayTasks();
+renderCategories();
+renderWeeklyStats();
+save();
+}
+
+function renderCategories() {
+let select = document.getElementById("taskCategory");
+select.innerHTML="";
+data.categories.forEach(cat=>{
+select.innerHTML+=`<option>${cat}</option>`;
+});
+}
+
+function addCategory() {
+let name = document.getElementById("newCategory").value.trim();
+if(!name) return;
+data.categories.push(name);
+document.getElementById("newCategory").value="";
+updateUI();
 }
 
 function addTask() {
 let name = document.getElementById("taskName").value.trim();
 let pts = parseInt(document.getElementById("taskPoints").value);
-if (!name) return;
-tasks.push({ name, pts });
-document.getElementById("taskName").value = "";
-save();
+let energy = parseInt(document.getElementById("taskEnergy").value);
+let category = document.getElementById("taskCategory").value;
+let day = parseInt(document.getElementById("taskDay").value);
+
+if(!name) return;
+
+data.tasks.push({
+id: Date.now(),
+name, pts, energy,
+category, day,
+completed:false
+});
+
+document.getElementById("taskName").value="";
 updateUI();
 }
 
-function completeTask(index) {
-currentPoints += tasks[index].pts;
-totalPointsEarned += tasks[index].pts;
-tasks.splice(index,1);
-save();
-updateUI();
-}
+function renderTodayTasks() {
+let today = new Date().getDay();
+let container = document.getElementById("todayTasks");
+container.innerHTML="";
 
-function renderTasks() {
-let list = document.getElementById("taskList");
-list.innerHTML = "";
-tasks.forEach((task,i)=>{
-list.innerHTML += `
+data.tasks.filter(t=>t.day===today && !t.completed)
+.forEach(task=>{
+container.innerHTML+=`
 <div class="task">
-<b>${task.name}</b> (${task.pts} pts)
+<b>${task.name}</b>
+(${task.pts} pts | energia ${task.energy})
 <br>
-<button onclick="completeTask(${i})">Concluir</button>
+<button onclick="completeTask(${task.id})">Concluir</button>
 </div>`;
 });
 }
 
-function addReward() {
-let name = document.getElementById("rewardName").value.trim();
-let cost = parseInt(document.getElementById("rewardCost").value);
-if (!name || !cost) return;
-rewards.push({ name, cost });
-document.getElementById("rewardName").value = "";
-document.getElementById("rewardCost").value = "";
-save();
-updateUI();
-}
+function completeTask(id) {
+let task = data.tasks.find(t=>t.id===id);
+if(!task) return;
 
-function redeemReward(index) {
-if (currentPoints < rewards[index].cost) {
-alert("Pontos insuficientes.");
+if(data.energyToday < task.energy){
+alert("Energia insuficiente hoje.");
 return;
 }
-currentPoints -= rewards[index].cost;
-history.push({ name: rewards[index].name, cost: rewards[index].cost, date: new Date().toLocaleString() });
-save();
+
+task.completed=true;
+data.energyToday -= task.energy;
+data.currentPoints += task.pts;
+data.totalPointsEarned += task.pts;
+data.history.push({name:task.name, pts:task.pts, date:new Date()});
+
 updateUI();
-alert("Recompensa desbloqueada!");
 }
 
-function renderRewards() {
-let list = document.getElementById("rewardList");
-list.innerHTML = "";
-rewards.forEach((reward,i)=>{
-list.innerHTML += `
-<div class="reward">
-<b>${reward.name}</b> (${reward.cost} pts)
-<br>
-<button onclick="redeemReward(${i})">Comprar</button>
-</div>`;
-});
+function renderWeeklyStats() {
+let weekStart = getWeekStart();
+let count = data.history.filter(h=>new Date(h.date)>=weekStart).length;
+document.getElementById("weeklyCompleted").innerText = count;
 }
 
-function buySpecial() {
-if (currentPoints < 5000) {
-alert("Você ainda não tem 5000 pontos.");
-return;
-}
-currentPoints -= 5000;
-specialCount++;
-history.push({ name: "Recompensa Especial", cost: 5000, date: new Date().toLocaleString() });
-save();
-updateUI();
-alert("🔥 Recompensa Especial conquistada!");
-}
-
-function renderHistory() {
-let list = document.getElementById("historyList");
-list.innerHTML = "";
-history.slice().reverse().forEach(item=>{
-list.innerHTML += `
-<div class="small">
-${item.date} - ${item.name} (-${item.cost} pts)
-</div>`;
-});
+function toggleMode(){
+document.getElementById("simpleMode").classList.toggle("hidden");
+document.getElementById("analysisMode").classList.toggle("hidden");
 }
 
 updateUI();
