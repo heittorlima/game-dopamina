@@ -6,8 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; max-width:900px; margin:auto;}
-h2 { margin-bottom:5px; }
+body { font-family: Arial; background:#f4f6f8; padding:20px; max-width:900px; margin:auto;}
 .section { background:white; padding:15px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
 button { padding:6px 12px; margin-top:5px; cursor:pointer; }
 input, select { padding:6px; margin:4px 0; width:100%; }
@@ -16,6 +15,7 @@ input, select { padding:6px; margin:4px 0; width:100%; }
 .task, .reward { border-bottom:1px solid #eee; padding:8px 0; }
 .small { font-size:13px; color:#666; }
 .level { font-size:18px; font-weight:bold; }
+.special { background:#fff8e1; padding:10px; border-radius:8px; margin-top:10px;}
 </style>
 </head>
 <body>
@@ -23,14 +23,22 @@ input, select { padding:6px; margin:4px 0; width:100%; }
 <h2>Sistema de Economia Pessoal</h2>
 
 <div class="section">
-<p><b>Pontos:</b> <span id="points">0</span></p>
+<p><b>Saldo Atual:</b> <span id="currentPoints">0</span></p>
+<p><b>Total Histórico:</b> <span id="totalPoints">0</span></p>
 <p class="level">Nível: <span id="level">1</span></p>
 
-<p>Progresso até Recompensa Especial (5000 pontos)</p>
+<p>Progresso até Recompensa Especial (5000)</p>
 <div class="progress-bar">
 <div class="progress-fill" id="progressFill"></div>
 </div>
 <p class="small"><span id="progressText"></span></p>
+
+<div class="special">
+<b>Recompensa Especial</b><br>
+Custo: 5000 pontos<br>
+Comprada: <span id="specialCount">0</span> vezes<br>
+<button onclick="buySpecial()">Comprar Especial</button>
+</div>
 </div>
 
 <div class="section">
@@ -55,7 +63,7 @@ input, select { padding:6px; margin:4px 0; width:100%; }
 <h3>Adicionar Recompensa</h3>
 <input id="rewardName" placeholder="Nome da recompensa">
 <input id="rewardCost" type="number" placeholder="Custo em pontos">
-<button onclick="addReward()">Adicionar Recompensa</button>
+<button onclick="addReward()">Adicionar</button>
 </div>
 
 <div class="section">
@@ -63,40 +71,52 @@ input, select { padding:6px; margin:4px 0; width:100%; }
 <div id="rewardList"></div>
 </div>
 
+<div class="section">
+<h3>Histórico de Compras</h3>
+<div id="historyList"></div>
+</div>
+
 <script>
-let points = parseInt(localStorage.getItem("points")) || 0;
+let currentPoints = parseInt(localStorage.getItem("currentPoints")) || 0;
+let totalPointsEarned = parseInt(localStorage.getItem("totalPointsEarned")) || 0;
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let rewards = JSON.parse(localStorage.getItem("rewards")) || [];
+let history = JSON.parse(localStorage.getItem("history")) || [];
+let specialCount = parseInt(localStorage.getItem("specialCount")) || 0;
 
 function save() {
-localStorage.setItem("points", points);
+localStorage.setItem("currentPoints", currentPoints);
+localStorage.setItem("totalPointsEarned", totalPointsEarned);
 localStorage.setItem("tasks", JSON.stringify(tasks));
 localStorage.setItem("rewards", JSON.stringify(rewards));
+localStorage.setItem("history", JSON.stringify(history));
+localStorage.setItem("specialCount", specialCount);
 }
 
 function updateUI() {
-document.getElementById("points").innerText = points;
+document.getElementById("currentPoints").innerText = currentPoints;
+document.getElementById("totalPoints").innerText = totalPointsEarned;
+document.getElementById("specialCount").innerText = specialCount;
 
-let level = Math.floor(points / 1000) + 1;
+let level = Math.floor(totalPointsEarned / 1000) + 1;
 document.getElementById("level").innerText = level;
 
-let progress = Math.min((points / 5000) * 100, 100);
+let progress = Math.min((currentPoints / 5000) * 100, 100);
 document.getElementById("progressFill").style.width = progress + "%";
 
-let remaining = 5000 - points;
+let remaining = 5000 - currentPoints;
 document.getElementById("progressText").innerText =
-remaining > 0 ? remaining + " pontos restantes" : "Recompensa Especial disponível!";
+remaining > 0 ? remaining + " pontos restantes" : "Especial disponível!";
 
 renderTasks();
 renderRewards();
+renderHistory();
 }
 
 function addTask() {
 let name = document.getElementById("taskName").value.trim();
 let pts = parseInt(document.getElementById("taskPoints").value);
-
 if (!name) return;
-
 tasks.push({ name, pts });
 document.getElementById("taskName").value = "";
 save();
@@ -104,7 +124,8 @@ updateUI();
 }
 
 function completeTask(index) {
-points += tasks[index].pts;
+currentPoints += tasks[index].pts;
+totalPointsEarned += tasks[index].pts;
 tasks.splice(index,1);
 save();
 updateUI();
@@ -113,23 +134,20 @@ updateUI();
 function renderTasks() {
 let list = document.getElementById("taskList");
 list.innerHTML = "";
-tasks.forEach((task, i) => {
+tasks.forEach((task,i)=>{
 list.innerHTML += `
 <div class="task">
-<b>${task.name}</b> (${task.pts} pontos)
+<b>${task.name}</b> (${task.pts} pts)
 <br>
 <button onclick="completeTask(${i})">Concluir</button>
-</div>
-`;
+</div>`;
 });
 }
 
 function addReward() {
 let name = document.getElementById("rewardName").value.trim();
 let cost = parseInt(document.getElementById("rewardCost").value);
-
 if (!name || !cost) return;
-
 rewards.push({ name, cost });
 document.getElementById("rewardName").value = "";
 document.getElementById("rewardCost").value = "";
@@ -138,28 +156,51 @@ updateUI();
 }
 
 function redeemReward(index) {
-if (points < rewards[index].cost) {
+if (currentPoints < rewards[index].cost) {
 alert("Pontos insuficientes.");
 return;
 }
-
-points -= rewards[index].cost;
+currentPoints -= rewards[index].cost;
+history.push({ name: rewards[index].name, cost: rewards[index].cost, date: new Date().toLocaleString() });
 save();
 updateUI();
-alert("Recompensa desbloqueada: " + rewards[index].name);
+alert("Recompensa desbloqueada!");
 }
 
 function renderRewards() {
 let list = document.getElementById("rewardList");
 list.innerHTML = "";
-rewards.forEach((reward, i) => {
+rewards.forEach((reward,i)=>{
 list.innerHTML += `
 <div class="reward">
-<b>${reward.name}</b> (${reward.cost} pontos)
+<b>${reward.name}</b> (${reward.cost} pts)
 <br>
 <button onclick="redeemReward(${i})">Comprar</button>
-</div>
-`;
+</div>`;
+});
+}
+
+function buySpecial() {
+if (currentPoints < 5000) {
+alert("Você ainda não tem 5000 pontos.");
+return;
+}
+currentPoints -= 5000;
+specialCount++;
+history.push({ name: "Recompensa Especial", cost: 5000, date: new Date().toLocaleString() });
+save();
+updateUI();
+alert("🔥 Recompensa Especial conquistada!");
+}
+
+function renderHistory() {
+let list = document.getElementById("historyList");
+list.innerHTML = "";
+history.slice().reverse().forEach(item=>{
+list.innerHTML += `
+<div class="small">
+${item.date} - ${item.name} (-${item.cost} pts)
+</div>`;
 });
 }
 
