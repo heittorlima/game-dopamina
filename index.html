@@ -1,236 +1,498 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
 <title>Dale um ⚡️</title>
+<meta name="theme-color" content="#0f172a" />
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f172a;
-    color: white;
-}
-
-.container {
-    padding: 20px;
-}
-
-h1 {
-    text-align: center;
-    color: #8b5cf6;
-}
-
-.top-card {
-    background: #1e293b;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-.points {
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.progress-bar {
-    height: 14px;
-    background: #334155;
-    border-radius: 8px;
-    margin-top: 10px;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    width: 0%;
-    background: #8b5cf6;
-    transition: width 0.4s ease;
-}
-
-.section-title {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #cbd5e1;
-}
-
-.card {
-    background: #1e293b;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    transition: transform 0.2s ease;
-}
-
-.card.completed {
-    opacity: 0.6;
-    transform: scale(0.98);
-}
-
-button {
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    margin-top: 8px;
-    background: #8b5cf6;
-    color: white;
-    font-weight: bold;
-}
-
-button:disabled {
-    background: #475569;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    margin-bottom: 8px;
-    background: #334155;
-    color: white;
-}
-
-.reward-locked {
-    opacity: 0.5;
-}
-
-.reward-unlocked {
-    border: 2px solid #10b981;
-}
+  :root{
+    --bg:#0f172a; --card:#111827aa; --card-2:#0f172a;
+    --muted:#94a3b8; --accent:#8b5cf6; --accent-2:#facc15;
+    --success:#10b981; --danger:#ef4444;
+    --glass: rgba(255,255,255,0.03);
+    --round:14px;
+    font-family: Inter, system-ui, -apple-system, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%; margin:0; background:var(--bg); color:#e6eef8; -webkit-font-smoothing:antialiased;}
+  .app{max-width:460px;margin:0 auto;padding:18px;padding-bottom:92px;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  h1{font-size:20px;color:var(--accent);margin:0;font-weight:700;}
+  .top{margin-top:14px;background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(10,12,20,0.6);}
+  .points-row{display:flex;align-items:center;justify-content:space-between;}
+  .points{font-size:20px;font-weight:700;color:#fff;}
+  .level{font-size:13px;color:var(--muted);}
+  .progress-wrap{margin-top:10px}
+  .progress-bg{height:12px;background:#1f2937;border-radius:999px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);width:0%;transition:width .5s cubic-bezier(.2,.9,.3,1)}
+  .section-title{margin-top:18px;color:var(--muted);font-size:13px;margin-bottom:8px}
+  /* task card */
+  .task-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));padding:12px;border-radius:12px;margin-bottom:10px;display:flex;gap:10px;align-items:center; justify-content:space-between;box-shadow:0 3px 8px rgba(3,7,18,0.35);border:1px solid rgba(255,255,255,0.02);}
+  .task-left{display:flex;gap:10px;align-items:center;min-width:0}
+  .category-pill{padding:6px 10px;border-radius:999px;font-size:12px;color:#061126;background:rgba(255,255,255,0.06)}
+  .task-title{font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;}
+  .task-meta{font-size:12px;color:var(--muted)}
+  .task-actions{display:flex;gap:8px;align-items:center}
+  .btn{background:var(--accent); border:none;color:white;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+  .btn.small{padding:6px 8px;font-size:13px}
+  .btn.disabled{background:#334155; cursor:not-allowed}
+  .muted{color:var(--muted);font-size:13px}
+  footer.tabbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(5,7,12,0.3), rgba(5,7,12,0.6));padding:10px 14px;display:flex;justify-content:space-around;align-items:center;backdrop-filter: blur(6px);}
+  .tabbtn{color:var(--muted);font-weight:700;background:transparent;border:none;padding:8px 10px;border-radius:10px}
+  .tabbtn.active{color:var(--accent)}
+  .add-floating{position:fixed; right:22px; bottom:76px; background:var(--accent); width:58px; height:58px;border-radius:999px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(139,92,246,0.18); font-size:28px; border:4px solid rgba(0,0,0,0.12)}
+  .small-card{background:var(--card);padding:10px;border-radius:12px;margin-bottom:10px}
+  .day-title{font-weight:700;margin:8px 0;color:var(--muted);font-size:14px}
+  .history-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:13px}
+  .top-flex{display:flex;align-items:center;gap:10px}
+  .accent-y{background:var(--accent-2);color:#081226;padding:8px;border-radius:8px;font-weight:800}
+  /* responsive tweak */
+  @media (max-width:420px){ .app{padding-left:14px;padding-right:14px} .task-title{max-width:140px}}
 </style>
 </head>
-
 <body>
-<div class="container">
-
-<h1>Dale um ⚡️</h1>
-
-<div class="top-card">
-    <div class="points">⚡ <span id="points">0</span> pontos</div>
-    <div class="progress-bar">
-        <div class="progress" id="progress"></div>
+<div class="app" id="app">
+  <header>
+    <h1>Dale um ⚡️</h1>
+    <div class="top-flex">
+      <div style="text-align:right">
+        <div class="muted">Nível</div>
+        <div class="level" id="level">1</div>
+      </div>
     </div>
-    <small>Progresso até 5000 pontos</small>
+  </header>
+
+  <!-- TODAY VIEW -->
+  <main id="view-today">
+    <div class="top">
+      <div class="points-row">
+        <div>
+          <div class="muted">Saldo</div>
+          <div class="points" id="currentPoints">0 ⚡</div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted">Especial</div>
+          <div id="specialCount" class="muted">0x</div>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="muted">Progresso até 5000</div>
+        <div class="progress-bg" style="margin-top:8px">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;justify-content:space-between">
+        <div class="small-card" style="flex:1">
+          <div class="muted">Recompensa Especial</div>
+          <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+            <div><strong>🏆 5000 pontos</strong></div>
+            <div><button id="buySpecialBtn" class="btn small">Comprar</button></div>
+          </div>
+        </div>
+        <div class="small-card" style="width:80px;text-align:center">
+          <div class="muted">Hoje</div>
+          <div id="todayDate" style="font-weight:700"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Tarefas para Hoje</div>
+    <div id="todayList"></div>
+  </main>
+
+  <!-- WEEK VIEW -->
+  <main id="view-week" style="display:none">
+    <div class="top small-card" style="margin-bottom:12px">
+      <div class="muted">Organize a semana</div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input id="quickTaskName" placeholder="Nome da tarefa" style="flex:1; background:#0b1220; border:none; padding:8px;border-radius:8px;color:#fff"/>
+        <input id="quickTaskPts" placeholder="pts" style="width:84px;background:#0b1220;border:none;padding:8px;border-radius:8px;color:#fff"/>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <select id="quickTaskDay" style="padding:8px;border-radius:8px;background:#0b1220;border:none;color:#fff">
+          <option value="1">Seg</option><option value="2">Ter</option><option value="3">Qua</option><option value="4">Qui</option><option value="5">Sex</option><option value="6">Sáb</option><option value="0">Dom</option>
+        </select>
+        <select id="quickTaskCat" style="padding:8px;border-radius:8px;background:#0b1220;border:none;color:#fff"></select>
+        <label style="display:flex;align-items:center;gap:6px"><input id="quickTaskRec" type="checkbox"/> recorrente</label>
+        <button class="btn" onclick="quickAdd()">Adicionar</button>
+      </div>
+    </div>
+
+    <!-- week days -->
+    <div id="weekContainer"></div>
+  </main>
+
+  <!-- HISTORY VIEW -->
+  <main id="view-history" style="display:none">
+    <div class="section-title">Histórico</div>
+    <div id="historyList"></div>
+  </main>
+
+  <!-- floating add -->
+  <button class="add-floating" id="openAdd">+</button>
+
+  <!-- bottom tabs -->
+  <footer class="tabbar">
+    <button class="tabbtn active" id="tabToday">Hoje</button>
+    <button class="tabbtn" id="tabWeek">Semana</button>
+    <button class="tabbtn" id="tabHistory">Histórico</button>
+  </footer>
 </div>
 
-<div class="section-title">Nova Tarefa</div>
-
-<input id="taskName" placeholder="Nome da tarefa">
-<input id="taskPoints" type="number" placeholder="Pontuação">
-
-<button onclick="addTask()">Adicionar Tarefa</button>
-
-<div class="section-title">Tarefas</div>
-<div id="taskList"></div>
-
-<div class="section-title">Recompensa Especial</div>
-<div id="rewardCard" class="card reward-locked">
-    <strong>🏆 Recompensa Especial</strong>
-    <p>Custo: 5000 pontos</p>
-    <button id="buyBtn" onclick="buyReward()" disabled>Comprar</button>
+<!-- modal add task (simple) -->
+<div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(3,5,10,0.6),rgba(3,5,10,0.6));backdrop-filter:blur(4px);">
+  <div style="width:92%;max-width:420px;background:#0b1220;padding:14px;border-radius:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;color:var(--accent)">Nova tarefa</div>
+      <button onclick="closeModal()" class="btn ghost">X</button>
+    </div>
+    <div style="margin-top:12px">
+      <input id="m_name" placeholder="Nome da tarefa" style="background:#0f172a;border:none;padding:10px;border-radius:8px;width:100%;color:#fff"/>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input id="m_points" placeholder="Pontos" style="flex:1;background:#0f172a;border:none;padding:10px;border-radius:8px;color:#fff"/>
+        <select id="m_day" style="width:110px;background:#0f172a;border:none;padding:10px;border-radius:8px;color:#fff">
+          <option value="1">Seg</option><option value="2">Ter</option><option value="3">Qua</option><option value="4">Qui</option><option value="5">Sex</option><option value="6">Sáb</option><option value="0">Dom</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+        <select id="m_cat" style="flex:1;background:#0f172a;border:none;padding:10px;border-radius:8px;color:#fff"></select>
+        <label style="display:flex;align-items:center;gap:6px"><input id="m_rec" type="checkbox"/> recorrente</label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="btn ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn" onclick="saveModal()">Salvar</button>
+      </div>
+    </div>
+  </div>
 </div>
-
-</div>
-
-<audio id="taskSound">
-<source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA..." type="audio/mp3">
-</audio>
 
 <script>
-let points = parseInt(localStorage.getItem("points")) || 0;
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+/* -------------------------
+   DATA MODEL & DEFAULTS
+   ------------------------- */
+const STORAGE_KEY = "daleData";
+const defaultData = {
+  currentPoints: 0,
+  totalPointsEarned: 0,
+  level: 1,
+  specialCount: 0,
+  tasks: [],   // array of task objects
+  history: [], // completed records
+  categories: [
+    {id:'estudo', name:'Estudo', color:'#7c3aed'},
+    {id:'corpo', name:'Corpo', color:'#06b6d4'},
+    {id:'casa', name:'Casa', color:'#f97316'},
+    {id:'social', name:'Social', color:'#f43f5e'},
+    {id:'projeto', name:'Projeto', color:'#60a5fa'},
+    {id:'organizacao', name:'Organização', color:'#a78bfa'}
+  ],
+  lastWeekStart: null
+};
+let data = loadData();
 
-const pointsEl = document.getElementById("points");
-const progressEl = document.getElementById("progress");
-const taskList = document.getElementById("taskList");
-const buyBtn = document.getElementById("buyBtn");
-const rewardCard = document.getElementById("rewardCard");
-const taskSound = document.getElementById("taskSound");
-
-function save() {
-    localStorage.setItem("points", points);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+/* -------------------------
+   UTILITIES
+   ------------------------- */
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const copy = JSON.parse(JSON.stringify(defaultData));
+  // set a starting lastWeekStart
+  copy.lastWeekStart = weekStartISO(new Date());
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+  return copy;
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function weekStartISO(d){
+  // returns ISO date string of Monday of current week (local)
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = date.getDay(); // 0 Sun .. 6 Sat
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(date.setDate(diff));
+  monday.setHours(0,0,0,0);
+  return monday.toISOString();
+}
+function playTone(type){
+  // small audio feedback via WebAudio (no external files)
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    if(type==='task'){ o.frequency.value = 880; g.gain.value = 0.06; }
+    if(type==='buy'){ o.frequency.value = 520; g.gain.value = 0.08; }
+    if(type==='level'){ o.frequency.value = 980; g.gain.value = 0.12; }
+    o.type = 'sine';
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+    setTimeout(()=>{ o.stop(); ctx.close(); },350);
+  }catch(e){}
 }
 
-function updateUI() {
-    pointsEl.innerText = points;
+/* -------------------------
+   WEEK RESET (runs on init)
+   ------------------------- */
+function ensureWeeklyReset(){
+  const currentWeek = weekStartISO(new Date());
+  if(!data.lastWeekStart) { data.lastWeekStart = currentWeek; saveData(); return; }
+  if(data.lastWeekStart !== currentWeek){
+    // new week started — reset 'completed' flags for all tasks (keeps tasks, keeps history)
+    data.tasks.forEach(t => t.completed = false);
+    data.lastWeekStart = currentWeek;
+    saveData();
+  }
+}
 
-    let percent = Math.min((points / 5000) * 100, 100);
-    progressEl.style.width = percent + "%";
+/* -------------------------
+   RENDER / UI
+   ------------------------- */
 
-    if (points >= 5000) {
-        buyBtn.disabled = false;
-        rewardCard.classList.remove("reward-locked");
-        rewardCard.classList.add("reward-unlocked");
+const el = {
+  currentPoints: () => document.getElementById('currentPoints'),
+  progressFill: () => document.getElementById('progressFill'),
+  level: () => document.getElementById('level'),
+  todayDate: () => document.getElementById('todayDate'),
+  todayList: () => document.getElementById('todayList'),
+  weekContainer: () => document.getElementById('weekContainer'),
+  historyList: () => document.getElementById('historyList'),
+  quickCat: () => document.getElementById('quickTaskCat'),
+  buyBtn: () => document.getElementById('buySpecialBtn'),
+  specialCount: () => document.getElementById('specialCount')
+};
+
+function refreshAll(){
+  ensureWeeklyReset();
+  renderHeader();
+  renderToday();
+  renderWeek();
+  renderHistory();
+  saveData();
+}
+
+function renderHeader(){
+  el.currentPoints().innerText = `${data.currentPoints} ⚡`;
+  el.level().innerText = Math.floor(data.totalPointsEarned/1000)+1;
+  const pct = Math.min(100, Math.round((data.currentPoints/5000)*100));
+  el.progressFill().style.width = pct + '%';
+  el.todayDate().innerText = (new Date()).toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short'});
+  el.specialCount().innerText = data.specialCount + 'x';
+  el.buyBtn().disabled = data.currentPoints < 5000;
+}
+
+function renderToday(){
+  const today = new Date().getDay(); // 0..6
+  const list = data.tasks.filter(t => t.dayOfWeek === today);
+  const container = el.todayList();
+  container.innerHTML = '';
+  if(list.length===0){
+    container.innerHTML = `<div class="muted" style="padding:10px 0">Sem tarefas programadas para hoje. Use o botão + para adicionar.</div>`;
+    return;
+  }
+  list.forEach(t=>{
+    container.appendChild(taskCard(t));
+  });
+}
+
+function renderWeek(){
+  const container = el.weekContainer();
+  container.innerHTML = '';
+  // days Mon(1) -> Sun(0)
+  const ordered = [1,2,3,4,5,6,0];
+  ordered.forEach(day=>{
+    const dayName = new Date().toLocaleDateString(undefined, {weekday:'long', timeZoneName:'short'});
+    // localized short label:
+    const label = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][day];
+    const dayTasks = data.tasks.filter(t=>t.dayOfWeek===day);
+    const dayBox = document.createElement('div');
+    dayBox.innerHTML = `<div class="day-title"><strong>${label}</strong></div>`;
+    const list = document.createElement('div');
+    if(dayTasks.length===0){
+      list.innerHTML = `<div class="muted" style="padding:8px 0">Sem tarefas</div>`;
     } else {
-        buyBtn.disabled = true;
-        rewardCard.classList.remove("reward-unlocked");
-        rewardCard.classList.add("reward-locked");
+      dayTasks.forEach(t=>{
+        list.appendChild(taskCard(t, true));
+      });
     }
-
-    renderTasks();
+    dayBox.appendChild(list);
+    container.appendChild(dayBox);
+  });
+  // fill quick add categories
+  el.quickCat().innerHTML = '';
+  data.categories.forEach(c=> el.quickCat().innerHTML += `<option value="${c.id}">${c.name}</option>`);
 }
 
-function addTask() {
-    const name = document.getElementById("taskName").value;
-    const pts = parseInt(document.getElementById("taskPoints").value);
-
-    if (!name || !pts) return;
-
-    tasks.push({ name, pts, completed: false });
-    save();
-    updateUI();
-
-    document.getElementById("taskName").value = "";
-    document.getElementById("taskPoints").value = "";
+function renderHistory(){
+  const h = el.historyList();
+  h.innerHTML = '';
+  if(data.history.length===0){ h.innerHTML = `<div class="muted">Sem histórico ainda.</div>`; return; }
+  // show most recent first
+  data.history.slice().reverse().forEach(item=>{
+    const d = new Date(item.date);
+    const block = document.createElement('div');
+    block.className = 'history-item';
+    block.innerHTML = `<div>${item.name} <span class="muted">• ${catName(item.category)}</span></div><div>${item.points} pts <div class="muted" style="font-size:11px">${d.toLocaleString()}</div></div>`;
+    h.appendChild(block);
+  });
 }
 
-function renderTasks() {
-    taskList.innerHTML = "";
+/* -------------------------
+   TASK CARD (creates DOM)
+   if compact = true, use small actions for week view
+   ------------------------- */
+function taskCard(task, compact=false){
+  const card = document.createElement('div');
+  card.className = 'task-card' + (task.completed ? ' completed' : '');
+  // left
+  const left = document.createElement('div'); left.className='task-left';
+  const pill = document.createElement('div'); pill.className='category-pill';
+  const cat = data.categories.find(c=>c.id===task.category);
+  pill.style.background = cat ? cat.color : 'rgba(255,255,255,0.03)';
+  pill.style.color = '#031025'; pill.innerText = cat ? cat.name : 'Geral';
+  const info = document.createElement('div');
+  info.innerHTML = `<div class="task-title">${task.name}</div><div class="task-meta">${task.points} pts ${task.recurring ? ' • recorrente' : '' }</div>`;
+  left.appendChild(pill); left.appendChild(info);
+  card.appendChild(left);
+  // actions
+  const actions = document.createElement('div'); actions.className='task-actions';
+  // complete / undo
+  const completeBtn = document.createElement('button');
+  completeBtn.className = 'btn small';
+  completeBtn.innerText = task.completed ? 'Feita' : 'Concluir';
+  completeBtn.disabled = task.completed;
+  completeBtn.onclick = ()=> completeTask(task.id);
+  actions.appendChild(completeBtn);
+  // recurring toggle (compact shows smaller)
+  const recBtn = document.createElement('button');
+  recBtn.className = 'btn ghost small';
+  recBtn.innerText = task.recurring ? 'Rec' : 'Rec?';
+  recBtn.onclick = ()=> {
+    task.recurring = !task.recurring;
+    saveData(); refreshAll();
+  };
+  actions.appendChild(recBtn);
+  // delete
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn ghost small';
+  delBtn.innerText = 'Apagar';
+  delBtn.onclick = ()=> {
+    if(!confirm('Remover tarefa?')) return;
+    data.tasks = data.tasks.filter(tt => tt.id !== task.id);
+    saveData(); refreshAll();
+  };
+  actions.appendChild(delBtn);
 
-    tasks.forEach((task, index) => {
-        const div = document.createElement("div");
-        div.className = "card" + (task.completed ? " completed" : "");
-
-        div.innerHTML = `
-            <strong>${task.name}</strong>
-            <p>${task.pts} pontos</p>
-            <button ${task.completed ? "disabled" : ""} onclick="completeTask(${index})">
-                ${task.completed ? "Concluída" : "Concluir"}
-            </button>
-        `;
-
-        taskList.appendChild(div);
-    });
+  card.appendChild(actions);
+  return card;
 }
 
-function completeTask(index) {
-    if (tasks[index].completed) return;
+/* -------------------------
+   ACTIONS: Add / Complete / Buy
+   ------------------------- */
 
-    tasks[index].completed = true;
-    points += tasks[index].pts;
+document.getElementById('openAdd').addEventListener('click', openModal);
+document.getElementById('tabToday').addEventListener('click', ()=>switchTab('today'));
+document.getElementById('tabWeek').addEventListener('click', ()=>switchTab('week'));
+document.getElementById('tabHistory').addEventListener('click', ()=>switchTab('history'));
+document.getElementById('buySpecialBtn').addEventListener('click', buySpecial);
 
-    taskSound.play();
-
-    save();
-    updateUI();
+function openModal(){
+  document.getElementById('modal').style.display = 'flex';
+  // populate categories selector
+  const sel = document.getElementById('m_cat'); sel.innerHTML = '';
+  data.categories.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+}
+function closeModal(){ document.getElementById('modal').style.display = 'none'; }
+function saveModal(){
+  const name = document.getElementById('m_name').value.trim();
+  const pts = parseInt(document.getElementById('m_points').value) || 0;
+  const day = parseInt(document.getElementById('m_day').value);
+  const cat = document.getElementById('m_cat').value;
+  const rec = document.getElementById('m_rec').checked;
+  if(!name || !pts) { alert('Nome e pontos são necessários'); return; }
+  data.tasks.push({ id: uid(), name, points: pts, category: cat, dayOfWeek: day, recurring: rec, completed:false, completedAt:null });
+  saveData(); closeModal(); refreshAll();
 }
 
-function buyReward() {
-    if (points < 5000) return;
-
-    points -= 5000;
-    alert("🏆 Recompensa Especial desbloqueada!");
-
-    save();
-    updateUI();
+function quickAdd(){
+  const name = document.getElementById('quickTaskName').value.trim();
+  const pts = parseInt(document.getElementById('quickTaskPts').value)||0;
+  const day = parseInt(document.getElementById('quickTaskDay').value);
+  const cat = document.getElementById('quickTaskCat').value;
+  const rec = document.getElementById('quickTaskRec').checked;
+  if(!name || !pts) return alert('Nome e pontos necessários');
+  data.tasks.push({ id: uid(), name, points: pts, category: cat, dayOfWeek: day, recurring: rec, completed:false, completedAt:null });
+  document.getElementById('quickTaskName').value=''; document.getElementById('quickTaskPts').value='';
+  saveData(); refreshAll();
 }
 
-updateUI();
+function completeTask(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t || t.completed) return;
+  // mark done
+  t.completed = true;
+  t.completedAt = new Date().toISOString();
+  data.currentPoints += t.points;
+  data.totalPointsEarned += t.points;
+  // push to history
+  data.history.push({ id: uid(), taskId: t.id, name: t.name, points: t.points, category: t.category, date: t.completedAt });
+  saveData();
+  // animations & sound
+  playTone('task');
+  // small UI flash: (simulate)
+  refreshAll();
+}
+
+function buySpecial(){
+  if(data.currentPoints < 5000) return alert('Ainda não tem 5000 pontos.');
+  if(!confirm('Comprar Recompensa Especial por 5000 pontos?')) return;
+  data.currentPoints -= 5000;
+  data.specialCount = (data.specialCount||0) + 1;
+  data.history.push({ id: uid(), taskId:null, name: 'Recompensa Especial', points: -5000, category: 'recompensa', date: new Date().toISOString() });
+  saveData();
+  playTone('buy');
+  refreshAll();
+  alert('🔥 Recompensa Especial comprada!');
+}
+
+/* -------------------------
+   CATEGORIES: add helper
+   ------------------------- */
+function catName(id){
+  const c = data.categories.find(x=>x.id===id);
+  return c ? c.name : id;
+}
+function addCategory(id,name,color){
+  data.categories.push({id,name,color});
+  saveData();
+}
+
+/* -------------------------
+   TABS
+   ------------------------- */
+function switchTab(tab){
+  document.getElementById('view-today').style.display = tab==='today' ? '' : 'none';
+  document.getElementById('view-week').style.display = tab==='week' ? '' : 'none';
+  document.getElementById('view-history').style.display = tab==='history' ? '' : 'none';
+  document.getElementById('tabToday').classList.toggle('active', tab==='today');
+  document.getElementById('tabWeek').classList.toggle('active', tab==='week');
+  document.getElementById('tabHistory').classList.toggle('active', tab==='history');
+}
+
+/* -------------------------
+   INIT
+   ------------------------- */
+(function init(){
+  // initial population of categories in select for week quick add
+  refreshAll();
+  switchTab('today');
+})();
 </script>
-
 </body>
 </html>
