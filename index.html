@@ -1,235 +1,232 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Sistema Operacional Pessoal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dale um ⚡️</title>
 
 <style>
-body { font-family: Arial; background:#f4f6f8; padding:20px; max-width:1000px; margin:auto;}
-.section { background:white; padding:15px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-button { padding:6px 12px; margin-top:5px; cursor:pointer; }
-input, select { padding:6px; margin:4px 0; width:100%; }
-.progress-bar { height:18px; background:#ddd; border-radius:10px; overflow:hidden; }
-.progress-fill { height:100%; background:#4caf50; width:0%; transition:0.3s; }
-.small { font-size:13px; color:#666; }
-.hidden { display:none; }
-.toggle { float:right; }
-.energy { font-weight:bold; }
-.task { border-bottom:1px solid #eee; padding:8px 0; }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #8b5cf6;
+}
+
+.top-card {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.points {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.progress-bar {
+    height: 14px;
+    background: #334155;
+    border-radius: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    background: #8b5cf6;
+    transition: width 0.4s ease;
+}
+
+.section-title {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #cbd5e1;
+}
+
+.card {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+}
+
+.card.completed {
+    opacity: 0.6;
+    transform: scale(0.98);
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    margin-top: 8px;
+    background: #8b5cf6;
+    color: white;
+    font-weight: bold;
+}
+
+button:disabled {
+    background: #475569;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 8px;
+    background: #334155;
+    color: white;
+}
+
+.reward-locked {
+    opacity: 0.5;
+}
+
+.reward-unlocked {
+    border: 2px solid #10b981;
+}
 </style>
 </head>
+
 <body>
+<div class="container">
 
-<h2>Sistema Operacional Pessoal</h2>
-<button class="toggle" onclick="toggleMode()">Alternar Modo</button>
+<h1>Dale um ⚡️</h1>
 
-<!-- MODO SIMPLES -->
-<div id="simpleMode">
-
-<div class="section">
-<b>Saldo:</b> <span id="currentPoints"></span> |
-<b>Nível:</b> <span id="level"></span>
-<br><br>
-Energia Hoje: <span class="energy" id="energy"></span>/10
-<br><br>
-Progresso até Especial (5000)
-<div class="progress-bar">
-<div class="progress-fill" id="progressFill"></div>
-</div>
-<span class="small" id="progressText"></span>
+<div class="top-card">
+    <div class="points">⚡ <span id="points">0</span> pontos</div>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+    <small>Progresso até 5000 pontos</small>
 </div>
 
-<div class="section">
-<h3>Tarefas de Hoje</h3>
-<div id="todayTasks"></div>
-</div>
+<div class="section-title">Nova Tarefa</div>
 
-</div>
+<input id="taskName" placeholder="Nome da tarefa">
+<input id="taskPoints" type="number" placeholder="Pontuação">
 
-<!-- MODO ANÁLISE -->
-<div id="analysisMode" class="hidden">
+<button onclick="addTask()">Adicionar Tarefa</button>
 
-<div class="section">
-<b>Total Histórico:</b> <span id="totalPoints"></span><br>
-<b>Especial Comprada:</b> <span id="specialCount"></span> vezes<br>
-<b>Tarefas Concluídas na Semana:</b> <span id="weeklyCompleted"></span>
-</div>
+<div class="section-title">Tarefas</div>
+<div id="taskList"></div>
 
-<div class="section">
-<h3>Adicionar Tarefa</h3>
-<input id="taskName" placeholder="Nome">
-<select id="taskPoints">
-<option value="10">Muito Fácil (10)</option>
-<option value="25">Fácil (25)</option>
-<option value="75">Média (75)</option>
-<option value="150">Difícil (150)</option>
-<option value="300">Muito Difícil (300)</option>
-</select>
-
-<select id="taskEnergy">
-<option value="1">Energia 1</option>
-<option value="2">Energia 2</option>
-<option value="3">Energia 3</option>
-<option value="4">Energia 4</option>
-<option value="5">Energia 5</option>
-</select>
-
-<select id="taskCategory"></select>
-
-<select id="taskDay">
-<option value="1">Segunda</option>
-<option value="2">Terça</option>
-<option value="3">Quarta</option>
-<option value="4">Quinta</option>
-<option value="5">Sexta</option>
-<option value="6">Sábado</option>
-<option value="0">Domingo</option>
-</select>
-
-<button onclick="addTask()">Adicionar</button>
-
-<h4>Nova Categoria</h4>
-<input id="newCategory" placeholder="Nome da categoria">
-<button onclick="addCategory()">Adicionar Categoria</button>
-
+<div class="section-title">Recompensa Especial</div>
+<div id="rewardCard" class="card reward-locked">
+    <strong>🏆 Recompensa Especial</strong>
+    <p>Custo: 5000 pontos</p>
+    <button id="buyBtn" onclick="buyReward()" disabled>Comprar</button>
 </div>
 
 </div>
+
+<audio id="taskSound">
+<source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA..." type="audio/mp3">
+</audio>
 
 <script>
-let data = JSON.parse(localStorage.getItem("sopData")) || {
-currentPoints: 0,
-totalPointsEarned: 0,
-energyToday: 10,
-lastEnergyReset: null,
-tasks: [],
-categories: ["Estudo","Corpo","Casa","Social","Projeto","Organização"],
-specialCount: 0,
-history: []
-};
+let points = parseInt(localStorage.getItem("points")) || 0;
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+const pointsEl = document.getElementById("points");
+const progressEl = document.getElementById("progress");
+const taskList = document.getElementById("taskList");
+const buyBtn = document.getElementById("buyBtn");
+const rewardCard = document.getElementById("rewardCard");
+const taskSound = document.getElementById("taskSound");
 
 function save() {
-localStorage.setItem("sopData", JSON.stringify(data));
-}
-
-function getWeekStart() {
-let now = new Date();
-let day = now.getDay();
-let diff = now.getDate() - day + (day === 0 ? -6 : 1);
-return new Date(now.setDate(diff));
-}
-
-function resetEnergyIfNeeded() {
-let today = new Date().toDateString();
-if (data.lastEnergyReset !== today) {
-data.energyToday = 10;
-data.lastEnergyReset = today;
-}
+    localStorage.setItem("points", points);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 function updateUI() {
-resetEnergyIfNeeded();
+    pointsEl.innerText = points;
 
-document.getElementById("currentPoints").innerText = data.currentPoints;
-document.getElementById("totalPoints").innerText = data.totalPointsEarned;
-document.getElementById("level").innerText = Math.floor(data.totalPointsEarned/1000)+1;
-document.getElementById("specialCount").innerText = data.specialCount;
-document.getElementById("energy").innerText = data.energyToday;
+    let percent = Math.min((points / 5000) * 100, 100);
+    progressEl.style.width = percent + "%";
 
-let progress = Math.min((data.currentPoints/5000)*100,100);
-document.getElementById("progressFill").style.width = progress+"%";
+    if (points >= 5000) {
+        buyBtn.disabled = false;
+        rewardCard.classList.remove("reward-locked");
+        rewardCard.classList.add("reward-unlocked");
+    } else {
+        buyBtn.disabled = true;
+        rewardCard.classList.remove("reward-unlocked");
+        rewardCard.classList.add("reward-locked");
+    }
 
-document.getElementById("progressText").innerText =
-data.currentPoints>=5000 ? "Especial disponível!" :
-(5000-data.currentPoints)+" pontos restantes";
-
-renderTodayTasks();
-renderCategories();
-renderWeeklyStats();
-save();
-}
-
-function renderCategories() {
-let select = document.getElementById("taskCategory");
-select.innerHTML="";
-data.categories.forEach(cat=>{
-select.innerHTML+=`<option>${cat}</option>`;
-});
-}
-
-function addCategory() {
-let name = document.getElementById("newCategory").value.trim();
-if(!name) return;
-data.categories.push(name);
-document.getElementById("newCategory").value="";
-updateUI();
+    renderTasks();
 }
 
 function addTask() {
-let name = document.getElementById("taskName").value.trim();
-let pts = parseInt(document.getElementById("taskPoints").value);
-let energy = parseInt(document.getElementById("taskEnergy").value);
-let category = document.getElementById("taskCategory").value;
-let day = parseInt(document.getElementById("taskDay").value);
+    const name = document.getElementById("taskName").value;
+    const pts = parseInt(document.getElementById("taskPoints").value);
 
-if(!name) return;
+    if (!name || !pts) return;
 
-data.tasks.push({
-id: Date.now(),
-name, pts, energy,
-category, day,
-completed:false
-});
+    tasks.push({ name, pts, completed: false });
+    save();
+    updateUI();
 
-document.getElementById("taskName").value="";
-updateUI();
+    document.getElementById("taskName").value = "";
+    document.getElementById("taskPoints").value = "";
 }
 
-function renderTodayTasks() {
-let today = new Date().getDay();
-let container = document.getElementById("todayTasks");
-container.innerHTML="";
+function renderTasks() {
+    taskList.innerHTML = "";
 
-data.tasks.filter(t=>t.day===today && !t.completed)
-.forEach(task=>{
-container.innerHTML+=`
-<div class="task">
-<b>${task.name}</b>
-(${task.pts} pts | energia ${task.energy})
-<br>
-<button onclick="completeTask(${task.id})">Concluir</button>
-</div>`;
-});
+    tasks.forEach((task, index) => {
+        const div = document.createElement("div");
+        div.className = "card" + (task.completed ? " completed" : "");
+
+        div.innerHTML = `
+            <strong>${task.name}</strong>
+            <p>${task.pts} pontos</p>
+            <button ${task.completed ? "disabled" : ""} onclick="completeTask(${index})">
+                ${task.completed ? "Concluída" : "Concluir"}
+            </button>
+        `;
+
+        taskList.appendChild(div);
+    });
 }
 
-function completeTask(id) {
-let task = data.tasks.find(t=>t.id===id);
-if(!task) return;
+function completeTask(index) {
+    if (tasks[index].completed) return;
 
-if(data.energyToday < task.energy){
-alert("Energia insuficiente hoje.");
-return;
+    tasks[index].completed = true;
+    points += tasks[index].pts;
+
+    taskSound.play();
+
+    save();
+    updateUI();
 }
 
-task.completed=true;
-data.energyToday -= task.energy;
-data.currentPoints += task.pts;
-data.totalPointsEarned += task.pts;
-data.history.push({name:task.name, pts:task.pts, date:new Date()});
+function buyReward() {
+    if (points < 5000) return;
 
-updateUI();
-}
+    points -= 5000;
+    alert("🏆 Recompensa Especial desbloqueada!");
 
-function renderWeeklyStats() {
-let weekStart = getWeekStart();
-let count = data.history.filter(h=>new Date(h.date)>=weekStart).length;
-document.getElementById("weeklyCompleted").innerText = count;
-}
-
-function toggleMode(){
-document.getElementById("simpleMode").classList.toggle("hidden");
-document.getElementById("analysisMode").classList.toggle("hidden");
+    save();
+    updateUI();
 }
 
 updateUI();
