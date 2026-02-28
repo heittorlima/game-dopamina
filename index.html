@@ -19,10 +19,11 @@ button { padding: 10px 20px; margin: 5px; }
 
 <input id="task" placeholder="Qual tarefa?" /><br><br>
 <input id="reward" placeholder="Qual recompensa?" /><br><br>
-<input id="minutes" type="number" placeholder="Minutos" /><br><br>
+<<input id="minutes" type="number" placeholder="Minutos" min="0" />
+<input id="seconds" type="number" placeholder="Segundos" min="0" max="59" /><br><br>
 
 <button onclick="startTimer()">COMEÇAR</button>
-<button onclick="finishTask()">FINALIZAR</button>
+<button id="finishBtn" onclick="finishTask()" disabled>FINALIZAR</button>
 
 <div id="timer">00:00</div>
 <div id="response"></div>
@@ -45,15 +46,20 @@ let timerInterval = null;
 // --------- TIMER ---------
 
 function startTimer() {
-    let minutes = parseInt(document.getElementById("minutes").value);
 
-    if (!minutes || minutes <= 0) {
+    let minutes = parseInt(document.getElementById("minutes").value) || 0;
+    let seconds = parseInt(document.getElementById("seconds").value) || 0;
+
+    timeLeft = (minutes * 60) + seconds;
+
+    if (timeLeft <= 0) {
         alert("Digite um tempo válido.");
         return;
     }
 
-    timeLeft = minutes * 60;
     updateTimer();
+
+    document.getElementById("finishBtn").disabled = true;
 
     if (timerInterval) clearInterval(timerInterval);
 
@@ -64,20 +70,22 @@ function startTimer() {
         } else {
             clearInterval(timerInterval);
             timerInterval = null;
+
+            document.getElementById("finishBtn").disabled = false;
+
+            finishTask();
         }
     }, 1000);
-}
-
-function updateTimer() {
-    let m = Math.floor(timeLeft / 60);
-    let s = timeLeft % 60;
-    document.getElementById("timer").innerText =
-        String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
 }
 
 // --------- FINALIZAÇÃO ---------
 
 async function finishTask() {
+    
+    if (timeLeft > 0) {
+    alert("O tempo ainda não terminou.");
+    return;
+}
 
     if (timerInterval) {
         clearInterval(timerInterval);
