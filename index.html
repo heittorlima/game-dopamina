@@ -1,148 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Game Dopamina</title>
+<title>Sistema de Economia Pessoal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body { font-family: Arial; text-align: center; padding: 20px; }
-button { padding: 10px 20px; margin: 5px; }
-#timer { font-size: 32px; margin: 20px; }
+body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; max-width:900px; margin:auto;}
+h2 { margin-bottom:5px; }
+.section { background:white; padding:15px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+button { padding:6px 12px; margin-top:5px; cursor:pointer; }
+input, select { padding:6px; margin:4px 0; width:100%; }
+.progress-bar { height:20px; background:#ddd; border-radius:10px; overflow:hidden; }
+.progress-fill { height:100%; background:#4caf50; width:0%; transition:0.3s; }
+.task, .reward { border-bottom:1px solid #eee; padding:8px 0; }
+.small { font-size:13px; color:#666; }
+.level { font-size:18px; font-weight:bold; }
 </style>
 </head>
 <body>
 
-<h2>Game Dopamina</h2>
+<h2>Sistema de Economia Pessoal</h2>
 
-<p>Pontos: <span id="points">0</span></p>
-<p>Tarefas na semana: <span id="weekly">0</span></p>
-<p>Status ⚡️: <span id="status">Bloqueado</span></p>
+<div class="section">
+<p><b>Pontos:</b> <span id="points">0</span></p>
+<p class="level">Nível: <span id="level">1</span></p>
 
-<input id="task" placeholder="Qual tarefa?" /><br><br>
-<input id="reward" placeholder="Qual recompensa?" /><br><br>
-<<input id="minutes" type="number" placeholder="Minutos" min="0" />
-<input id="seconds" type="number" placeholder="Segundos" min="0" max="59" /><br><br>
+<p>Progresso até Recompensa Especial (5000 pontos)</p>
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+<p class="small"><span id="progressText"></span></p>
+</div>
 
-<button onclick="startTimer()">COMEÇAR</button>
-<button id="finishBtn" onclick="finishTask()" disabled>FINALIZAR</button>
+<div class="section">
+<h3>Adicionar Tarefa</h3>
+<input id="taskName" placeholder="Nome da tarefa">
+<select id="taskPoints">
+<option value="10">Muito Fácil (10)</option>
+<option value="25">Fácil (25)</option>
+<option value="75">Média (75)</option>
+<option value="150">Difícil (150)</option>
+<option value="300">Muito Difícil (300)</option>
+</select>
+<button onclick="addTask()">Adicionar</button>
+</div>
 
-<div id="timer">00:00</div>
-<div id="response"></div>
+<div class="section">
+<h3>Tarefas Pendentes</h3>
+<div id="taskList"></div>
+</div>
+
+<div class="section">
+<h3>Adicionar Recompensa</h3>
+<input id="rewardName" placeholder="Nome da recompensa">
+<input id="rewardCost" type="number" placeholder="Custo em pontos">
+<button onclick="addReward()">Adicionar Recompensa</button>
+</div>
+
+<div class="section">
+<h3>Recompensas</h3>
+<div id="rewardList"></div>
+</div>
 
 <script>
-
-const API_KEY = "AIzaSyC3yuYHEI7KV-45yeiLCOefR4l66A-lyI0";
-
-// --------- INICIALIZAÇÃO ---------
-
 let points = parseInt(localStorage.getItem("points")) || 0;
-let weeklyTasks = parseInt(localStorage.getItem("weeklyTasks")) || 0;
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let rewards = JSON.parse(localStorage.getItem("rewards")) || [];
 
+function save() {
+localStorage.setItem("points", points);
+localStorage.setItem("tasks", JSON.stringify(tasks));
+localStorage.setItem("rewards", JSON.stringify(rewards));
+}
+
+function updateUI() {
 document.getElementById("points").innerText = points;
-document.getElementById("weekly").innerText = weeklyTasks;
 
-let timeLeft = 0;
-let timerInterval = null;
+let level = Math.floor(points / 1000) + 1;
+document.getElementById("level").innerText = level;
 
-// --------- TIMER ---------
+let progress = Math.min((points / 5000) * 100, 100);
+document.getElementById("progressFill").style.width = progress + "%";
 
-function startTimer() {
+let remaining = 5000 - points;
+document.getElementById("progressText").innerText =
+remaining > 0 ? remaining + " pontos restantes" : "Recompensa Especial disponível!";
 
-    let minutes = parseInt(document.getElementById("minutes").value) || 0;
-    let seconds = parseInt(document.getElementById("seconds").value) || 0;
-
-    timeLeft = (minutes * 60) + seconds;
-
-    if (timeLeft <= 0) {
-        alert("Digite um tempo válido.");
-        return;
-    }
-
-    updateTimer();
-
-    document.getElementById("finishBtn").disabled = true;
-
-    if (timerInterval) clearInterval(timerInterval);
-
-    timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            updateTimer();
-        } else {
-            clearInterval(timerInterval);
-            timerInterval = null;
-
-            document.getElementById("finishBtn").disabled = false;
-
-            finishTask();
-        }
-    }, 1000);
+renderTasks();
+renderRewards();
 }
 
-// --------- FINALIZAÇÃO ---------
+function addTask() {
+let name = document.getElementById("taskName").value.trim();
+let pts = parseInt(document.getElementById("taskPoints").value);
 
-async function finishTask() {
-    
-    if (timeLeft > 0) {
-    alert("O tempo ainda não terminou.");
-    return;
+if (!name) return;
+
+tasks.push({ name, pts });
+document.getElementById("taskName").value = "";
+save();
+updateUI();
 }
 
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+function completeTask(index) {
+points += tasks[index].pts;
+tasks.splice(index,1);
+save();
+updateUI();
+}
 
-    let task = document.getElementById("task").value.trim();
-    let reward = document.getElementById("reward").value.trim();
-
-    if (!task) {
-        alert("Descreva a tarefa.");
-        return;
-    }
-
-    const prompt = `
-O usuário disse que fez a tarefa: "${task}".
-Analise se parece uma tarefa produtiva real.
-Responda apenas:
-APROVADO
-ou
-REPROVADO
+function renderTasks() {
+let list = document.getElementById("taskList");
+list.innerHTML = "";
+tasks.forEach((task, i) => {
+list.innerHTML += `
+<div class="task">
+<b>${task.name}</b> (${task.pts} pontos)
+<br>
+<button onclick="completeTask(${i})">Concluir</button>
+</div>
 `;
-
-    const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        }
-    );
-
-    const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text.trim();
-
-    if (text.includes("APROVADO")) {
-
-        points++;
-        weeklyTasks++;
-
-        localStorage.setItem("points", points);
-        localStorage.setItem("weeklyTasks", weeklyTasks);
-
-        document.getElementById("points").innerText = points;
-        document.getElementById("weekly").innerText = weeklyTasks;
-
-        document.getElementById("response").innerText =
-            "✅ Tarefa validada! Recompensa liberada: " + reward;
-
-    } else {
-        document.getElementById("response").innerText =
-            "❌ Tarefa não validada.";
-    }
+});
 }
 
+function addReward() {
+let name = document.getElementById("rewardName").value.trim();
+let cost = parseInt(document.getElementById("rewardCost").value);
+
+if (!name || !cost) return;
+
+rewards.push({ name, cost });
+document.getElementById("rewardName").value = "";
+document.getElementById("rewardCost").value = "";
+save();
+updateUI();
+}
+
+function redeemReward(index) {
+if (points < rewards[index].cost) {
+alert("Pontos insuficientes.");
+return;
+}
+
+points -= rewards[index].cost;
+save();
+updateUI();
+alert("Recompensa desbloqueada: " + rewards[index].name);
+}
+
+function renderRewards() {
+let list = document.getElementById("rewardList");
+list.innerHTML = "";
+rewards.forEach((reward, i) => {
+list.innerHTML += `
+<div class="reward">
+<b>${reward.name}</b> (${reward.cost} pontos)
+<br>
+<button onclick="redeemReward(${i})">Comprar</button>
+</div>
+`;
+});
+}
+
+updateUI();
 </script>
 
 </body>
